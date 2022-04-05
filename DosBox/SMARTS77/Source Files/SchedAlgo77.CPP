@@ -25,5 +25,16 @@ int roundRobin( )
 
 int edf()
 {
+	int count;
+	int nextTask = SMARTS.getTotalTasks();
+	int minTime = MAXINT;
 
+	for (count = 0; count < SMARTS.getTotalTasks(); count++) {
+		if (SMARTS.getStatus(count) == READY && SMARTS.getRemainingTimeOfTask(count) < minTime) {
+			minTime = SMARTS.getRemainingTimeOfTask(count);
+			nextTask = count;	
+		}
+	}
+
+	return nextTask;
 }

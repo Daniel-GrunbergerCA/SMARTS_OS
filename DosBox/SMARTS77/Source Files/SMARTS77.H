@@ -47,12 +47,14 @@ private:
 class Task 
 {
 public:
-	char name;                      // task name
+	char name;           // task name
+	unsigned backupStack[MaxStack];
 	unsigned stack[MaxStack];       // the stack
 	unsigned stackSeg, stackPtr;    // the stack pointer
 	int currentPriority;            // the priority of the task
 	int priority;                   // the original priority
 	int cpuTime;
+	int remaining_time_for_cycle;
 	int numOfRuns;
 	taskStatus status;              // the status of the task
 	Event *expectedEvent;           // the event that this task is waiting for
@@ -74,6 +76,7 @@ private:
 	int totalTasks;          // total declared tasks
 	int currentTask;        // time slice holding task
 	int deadlock;           // deadlock flag
+	bool error;
 	int progInt;            // 'program interrupt' flag
 	int contextSwitchFlag;  // enables/disables context switch
 	int endOfTimeSlice;     // indicates that has to be a context switch as soon as possible
@@ -131,6 +134,8 @@ public:
 	void getCurrentStack(unsigned &StackSeg, unsigned &StackPtr);
 	void setCurrentStack(unsigned StackSeg, unsigned StackPtr);
 	void getSchedStack(unsigned &StackSeg, unsigned &StackPtr);
+	void reDeclare(int taskNum);
+	void decreaseCycleTime(int taskNum);
 	void handleTimers();
 	void taskEnd();
 };

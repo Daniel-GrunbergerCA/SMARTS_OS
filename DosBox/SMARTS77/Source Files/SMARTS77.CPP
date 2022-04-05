@@ -7,6 +7,7 @@
 /****************************************************************/
 #include "smarts77.h"
 
+
 /**********    Function     **********/
 unsigned getTimerClocks( )
 // Gets the remaining clocks of the timer register
@@ -46,6 +47,45 @@ void Parallelism::externalFunctions(void interrupt ( *timerInterruptHandler)(...
 	for (int i=MaxStack-1; i >= (MaxStack-14); i--)
 		schedCopy[i]=contextSched.stack[i];
 }
+
+// We need to decrease remaining cycle time for all tasks
+void  Parallelism::decreaseCycleTime(int taskNum)
+{
+	context[taskNum].remaining_time_for_cycle--;
+	if (remaining_time_for_cycle <= 0)
+	{
+		if (context[taskNum].status != NOT_ACTIVE)
+		{
+			this->error = error;
+		}
+		else
+		{
+			reDeclare(taskNum);
+		}
+
+	}
+}
+
+void reDeclare(int taskNum)
+{
+	context[taskNum].numOfRuns--;
+	if (context[taskNum].numOfRuns == 0)
+	{
+		context[taskNum].status = NOT_ACTIVE;
+	}
+	else
+	{
+		remaining_time_for_cycle = context[taskNum].cpuTime;
+
+		stack[MaxStack -5] =   backupStack[MaxStack - 5];
+		for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
+			stack[i] = backupStack[i];
+
+		status = READY;
+	}
+}
+
+
 
 int Parallelism::declareTask(void far *code, char name, int cpuTime, int numOfRuns)
 		// Insert a new task entry in SMARTS context array [ ]
@@ -87,6 +127,12 @@ void Parallelism::runTheTasks()
 		{
 			textcolor(RED);
 			cprintf("\n\n\rExit : deadlock");
+			break;
+		}
+		if (error)
+		{
+			textcolor(RED);
+			cprintf("\n\n\rExit : error");
 			break;
 		}
 		if (activeTasks==0)
@@ -203,6 +249,11 @@ char Parallelism::getName(int taskNum)	// returns name found or ' ' if not
 char Parallelism::getCurrentName( )
 {	
 	return context[currentTask].name;
+}
+
+int Parallelism::getRemainingTimeOfTask(int taskNum)
+{
+	return context[taskNum].remaining_time_for_cycle;
 }
 
 taskStatus Parallelism::getStatus(int taskNum)  	
@@ -325,6 +376,11 @@ void Parallelism::handleTimers()
 		}
 	}
 
+	for (int i = totalTasks - 1; i >= 0; --i)
+	{
+	decreaseCycleTime(i);
+	}
+
 }
 
 void Parallelism::taskEnd( )
@@ -360,10 +416,17 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 	stack[MaxStack-3]=_FLAGS;
 	stack[MaxStack-2]=FP_OFF(userTaskEnd);
 	stack[MaxStack-1]=FP_SEG(userTaskEnd);
-	this->name= name;
-	this->cpuTime = cpuTime;
-	this->numOfRuns = numOfRuns;
+
+	for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
+		backupStack[i] = stack[i];
+
+	name= name;
+	cpuTime = cpuTime;
+	numOfRuns = numOfRuns;
 	status = READY;
+}
+
+
 }
 //----------------------------------------------------
 void Task::incrPriority( )
