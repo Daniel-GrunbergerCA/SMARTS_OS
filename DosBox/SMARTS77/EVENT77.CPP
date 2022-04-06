@@ -1,10 +1,4 @@
-/**************************************************************/
-/* A Small Real Time System for the Real-Time laboratory      */
-/* built by: A.Teitelbaum on an idea of H.G.Mendelbaum        */
-/* Jerusalem College of Technology, 5759-64 (1999)            */
-/* update Tishrey  5777     	                              */
-/* EVENT77.CPP, events handling	                              */
-/**************************************************************/
+
 #include "smarts77.h"
 
 Event::Event()

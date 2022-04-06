@@ -76,7 +76,7 @@ private:
 	int totalTasks;          // total declared tasks
 	int currentTask;        // time slice holding task
 	int deadlock;           // deadlock flag
-	bool error;
+	int error;
 	int progInt;            // 'program interrupt' flag
 	int contextSwitchFlag;  // enables/disables context switch
 	int endOfTimeSlice;     // indicates that has to be a context switch as soon as possible
@@ -134,6 +134,7 @@ public:
 	void getCurrentStack(unsigned &StackSeg, unsigned &StackPtr);
 	void setCurrentStack(unsigned StackSeg, unsigned StackPtr);
 	void getSchedStack(unsigned &StackSeg, unsigned &StackPtr);
+	int getRemainingTimeOfTask(int taskNum);
 	void reDeclare(int taskNum);
 	void decreaseCycleTime(int taskNum);
 	void handleTimers();

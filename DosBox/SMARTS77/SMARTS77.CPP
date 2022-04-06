@@ -1,10 +1,4 @@
-/****************************************************************/
-/* A Small Real Time System for the Real-Time laboratory        */
-/* built by: A.Teitelbaum on an idea of H.G.Mendelbaum          */
-/* Jerusalem College of Technology, 5759-64 (1999)              */
-/* update  Tishrey   5777                                       */
-/* SMARTS77.CPP, SMARTS class body                              */
-/****************************************************************/
+
 #include "smarts77.h"
 
 
@@ -30,6 +24,7 @@ Parallelism::Parallelism()
 	activeTasks = 0;
 	totalTasks  = 0;
 	deadlock    = false;
+	error = false;
 	contextSwitchFlag = true;
 	endOfTimeSlice = true;
 }
@@ -43,7 +38,7 @@ void Parallelism::externalFunctions(void interrupt ( *timerInterruptHandler)(...
 	this->scheduler = scheduler;
 	this->userTaskEnd = userTaskEnd;
 	this->algorithm = algorithm;
-	contextSched.declare(scheduler, userTaskEnd, 'S'); // prepare the stack of the scheduler task
+	contextSched.declare(scheduler, userTaskEnd, 'S', 10, 10); // prepare the stack of the scheduler task
 	for (int i=MaxStack-1; i >= (MaxStack-14); i--)
 		schedCopy[i]=contextSched.stack[i];
 }
@@ -52,11 +47,11 @@ void Parallelism::externalFunctions(void interrupt ( *timerInterruptHandler)(...
 void  Parallelism::decreaseCycleTime(int taskNum)
 {
 	context[taskNum].remaining_time_for_cycle--;
-	if (remaining_time_for_cycle <= 0)
+	if (context[taskNum].remaining_time_for_cycle <= 0)
 	{
 		if (context[taskNum].status != NOT_ACTIVE)
 		{
-			this->error = error;
+			this->error = 1;
 		}
 		else
 		{
@@ -66,7 +61,8 @@ void  Parallelism::decreaseCycleTime(int taskNum)
 	}
 }
 
-void reDeclare(int taskNum)
+// Responsible for restoring stack for next task to run and update status
+void Parallelism::reDeclare(int taskNum)
 {
 	context[taskNum].numOfRuns--;
 	if (context[taskNum].numOfRuns == 0)
@@ -75,13 +71,13 @@ void reDeclare(int taskNum)
 	}
 	else
 	{
-		remaining_time_for_cycle = context[taskNum].cpuTime;
+		context[taskNum].remaining_time_for_cycle = context[taskNum].cpuTime;
 
-		stack[MaxStack -5] =   backupStack[MaxStack - 5];
+		context[taskNum].stack[MaxStack -5] = context[taskNum].backupStack[MaxStack - 5];
 		for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
-			stack[i] = backupStack[i];
+			context[taskNum].stack[i] = context[taskNum].backupStack[i];
 
-		status = READY;
+		context[taskNum].status = READY;
 	}
 }
 
@@ -366,7 +362,8 @@ void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr)
 void Parallelism::handleTimers()
 	// handling of the sleep status mode
 {
-	for (int i=totalTasks-1; i >=0 ; --i) 
+	int i;
+	for (i=totalTasks-1; i >=0 ; --i) 
 	{	
 		if(getStatus(i)==SLEEP)
 		{
@@ -376,9 +373,9 @@ void Parallelism::handleTimers()
 		}
 	}
 
-	for (int i = totalTasks - 1; i >= 0; --i)
+	for (i = totalTasks - 1; i >= 0; --i)
 	{
-	decreaseCycleTime(i);
+		decreaseCycleTime(i);
 	}
 
 }
@@ -427,7 +424,7 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 }
 
 
-}
+
 //----------------------------------------------------
 void Task::incrPriority( )
 {
