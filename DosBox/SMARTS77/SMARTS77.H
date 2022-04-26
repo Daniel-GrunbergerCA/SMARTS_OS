@@ -139,6 +139,7 @@ public:
 	void decreaseCycleTime(int taskNum);
 	void handleTimers();
 	void taskEnd();
+	int getError();
 };
 //=======================
 /**********    Functions    **********/
@@ -150,6 +151,7 @@ void scheduler();
 void myTaskEnd();
 	// 'short term' scheduler algorithms 
 int roundRobin();
+int edf();
 	// main scheduler object
 extern Parallelism SMARTS;
 

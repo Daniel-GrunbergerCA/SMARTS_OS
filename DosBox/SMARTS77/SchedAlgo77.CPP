@@ -21,14 +21,16 @@ int edf()
 {
 	int count;
 	int nextTask = SMARTS.getTotalTasks();
-	int minTime = MAXINT;
+	int minTime = 1000;
 
 	for (count = 0; count < SMARTS.getTotalTasks(); count++) {
-		if (SMARTS.getStatus(count) == READY && SMARTS.getRemainingTimeOfTask(count) < minTime) {
-			minTime = SMARTS.getRemainingTimeOfTask(count);
-			nextTask = count;	
+		if (SMARTS.getStatus(count) == READY) {
+			if (SMARTS.getRemainingTimeOfTask(count) < minTime) {
+				minTime = SMARTS.getRemainingTimeOfTask(count);
+				nextTask = count;
+			}
 		}
 	}
-
+//	cprintf("%d\n\r", nextTask);
 	return nextTask;
 }

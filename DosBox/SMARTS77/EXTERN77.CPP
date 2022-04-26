@@ -66,6 +66,9 @@ void scheduler( )	// this also a parallel task
 				SMARTS.setDeadlock();
 			}
 	}
+	if (SMARTS.getError()) {
+		nextTask = SMARTS.getTotalTasks();
+	}
 		// ok to run a next task
 	SMARTS.setCurrentTask(nextTask);
 

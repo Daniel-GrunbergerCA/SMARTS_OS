@@ -56,10 +56,10 @@ void c()
 void main()
 {
 	clrscr();
-	SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, roundRobin);
-	SMARTS.declareTask(a, 'A', 50, 3);
-	SMARTS.declareTask(b, 'B', 70, 4);
-	SMARTS.declareTask(c, 'C', 100, 5);
+	SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, edf);
+	SMARTS.declareTask(a, 'A', 50, 7);
+	SMARTS.declareTask(b, 'B', 70, 3);
+	SMARTS.declareTask(c, 'C', 100, 4);
 	SMARTS.runTheTasks();
 }
 

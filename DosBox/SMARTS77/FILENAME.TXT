@@ -1,0 +1,37 @@
+In reDeclare. Task num: 0. Num of runs: 2
+In reDeclare. Task num: 1. Num of runs: 3
+In reDeclare. Task num: 2. Num of runs: 4
+In reDeclare. Task num: 0. Num of runs: 1
+In reDeclare. Task num: 1. Num of runs: 2
+In task endIn setCurrentNotActive. Current task: 3
+In callScheduler
+In reDeclare. Task num: 0. Num of runs: 0
+In reDeclare. Task: 0 finishedIn reDeclare. Task num: 0. Num of runs: 2
+In reDeclare. Task num: 1. Num of runs: 3
+In reDeclare. Task num: 2. Num of runs: 4
+In reDeclare. Task num: 0. Num of runs: 1
+In reDeclare. Task num: 1. Num of runs: 2
+In task endIn setCurrentNotActive. Current task: 3
+In callScheduler
+In reDeclare. Task num: 0. Num of runs: 0
+In reDeclare. Task: 0 finishedIn callScheduler
+In callScheduler
+In callScheduler
+In callScheduler
+In reDeclare. Task num: 0. Num of runs: 2
+In reDeclare. Task num: 1. Num of runs: 3
+In reDeclare. Task num: 2. Num of runs: 4
+In reDeclare. Task num: 0. Num of runs: 1
+In reDeclare. Task num: 1. Num of runs: 2
+In task endIn setCurrentNotActive. Current task: 2
+In callScheduler
+In reDeclare. Task num: 1. Num of runs: 1
+In task endIn setCurrentNotActive. Current task: 1
+In callScheduler
+In callScheduler
+In callScheduler
+In callScheduler
+In callScheduler
+In callScheduler
+In callScheduler
+In callScheduler

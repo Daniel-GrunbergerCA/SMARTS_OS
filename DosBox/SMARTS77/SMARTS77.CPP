@@ -46,15 +46,20 @@ void Parallelism::externalFunctions(void interrupt ( *timerInterruptHandler)(...
 // We need to decrease remaining cycle time for all tasks
 void  Parallelism::decreaseCycleTime(int taskNum)
 {
+
+
 	context[taskNum].remaining_time_for_cycle--;
+//	FILE* f = fopen("filename.txt", "a");  //a  == append
+//	fprintf(f, "In decreaseCycleTime. remaining_time_for_cycle: %d. Task num: %d. Num of runs: %d\n", context[taskNum].remaining_time_for_cycle, taskNum, context[taskNum].numOfRuns);
 	if (context[taskNum].remaining_time_for_cycle <= 0)
 	{
+	//	fprintf(f, "In loop. Task status is: %d\n", context[taskNum].status);
 		if (context[taskNum].status != NOT_ACTIVE)
 		{
+			cprintf("error");
 			this->error = 1;
 		}
-		else
-		{
+		else {
 			reDeclare(taskNum);
 		}
 
@@ -65,17 +70,16 @@ void  Parallelism::decreaseCycleTime(int taskNum)
 void Parallelism::reDeclare(int taskNum)
 {
 	context[taskNum].numOfRuns--;
-	if (context[taskNum].numOfRuns == 0)
-	{
-		context[taskNum].status = NOT_ACTIVE;
-	}
-	else
+	if (context[taskNum].numOfRuns > 0)
 	{
 		context[taskNum].remaining_time_for_cycle = context[taskNum].cpuTime;
 
-		context[taskNum].stack[MaxStack -5] = context[taskNum].backupStack[MaxStack - 5];
+
 		for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
 			context[taskNum].stack[i] = context[taskNum].backupStack[i];
+
+		context[taskNum].stackSeg =  FP_SEG(&context[taskNum].stack[MaxStack - 14]);
+		context[taskNum].stackPtr = FP_OFF(&context[taskNum].stack[MaxStack - 14]);
 
 		context[taskNum].status = READY;
 	}
@@ -125,7 +129,7 @@ void Parallelism::runTheTasks()
 			cprintf("\n\n\rExit : deadlock");
 			break;
 		}
-		if (error)
+		if (this->error == 1)
 		{
 			textcolor(RED);
 			cprintf("\n\n\rExit : error");
@@ -137,7 +141,6 @@ void Parallelism::runTheTasks()
 			break;
 		}
 	}
-
 		// restore the original BIOS 'interrupt vector' at the end before returning to regular DOS
 	asm	cli;	// no interrupts
 	setvect(timerInt, getvect(userInt));	// restore original BIOS time handler
@@ -145,6 +148,10 @@ void Parallelism::runTheTasks()
 	asm	sti;	// yes interrupts
 }
 
+int Parallelism::getError()
+{
+	return this->error;
+}
 void Parallelism::callScheduler( )
 	// Return the control to the scheduler, this sets ON the software interrupt ProgInt flag
 {
@@ -279,6 +286,11 @@ void Parallelism::resume(char taskName)
 
 void Parallelism::setCurrentNotActive()
 {	
+	FILE* f = fopen("filename.txt", "a");  //a  == append
+
+	fprintf(f, "In setCurrentNotActive. Current task: %d\n", currentTask);
+
+	fclose(f);
 	context[currentTask].status = NOT_ACTIVE;
 	--activeTasks;
 }
@@ -363,8 +375,13 @@ void Parallelism::handleTimers()
 	// handling of the sleep status mode
 {
 	int i;
+
+	// It gets here
+
 	for (i=totalTasks-1; i >=0 ; --i) 
 	{	
+
+
 		if(getStatus(i)==SLEEP)
 		{
 			sleepDecr(i);
@@ -383,6 +400,11 @@ void Parallelism::handleTimers()
 void Parallelism::taskEnd( )
 	// This function is called after the last operation of a task, instead of function return
 {
+	FILE* f = fopen("filename.txt", "a");  //a  == append
+
+	fprintf(f, "In task end");
+
+	fclose(f);
 	SMARTS.setCurrentNotActive();
 	SMARTS.callScheduler();	// return the control to the scheduler to run a next task
 }
@@ -417,10 +439,11 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 	for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
 		backupStack[i] = stack[i];
 
-	name= name;
-	cpuTime = cpuTime;
-	numOfRuns = numOfRuns;
-	status = READY;
+	this->name= name;
+	this->cpuTime = cpuTime;
+	this->remaining_time_for_cycle = cpuTime;
+	this->numOfRuns = numOfRuns;
+	this->status = READY;
 }
 
 
@@ -441,11 +464,12 @@ void Task::sleepDecr( )
 {	
 	if (status==SLEEP)
 	{
-		if (sleepCount > 0)
+		if (sleepCount > 0) {
 			--sleepCount;
-		if (!sleepCount)
+		}
+		if (!sleepCount) {
 			status = READY;
+		}
 	}
 }
-
 
