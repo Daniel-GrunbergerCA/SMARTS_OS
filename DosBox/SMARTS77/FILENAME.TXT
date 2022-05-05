@@ -35,3 +35,21 @@ In callScheduler
 In callScheduler
 In callScheduler
 In callScheduler
+In task endIn setCurrentNotActive. Current task: 0
+In task endIn setCurrentNotActive. Current task: 1
+In task endIn setCurrentNotActive. Current task: 2
+In task endIn setCurrentNotActive. Current task: 0
+In task endIn setCurrentNotActive. Current task: 1
+In task endIn setCurrentNotActive. Current task: 2
+In task endIn setCurrentNotActive. Current task: 0
+In task endIn setCurrentNotActive. Current task: 1
+In task endIn setCurrentNotActive. Current task: 2
+In task endIn setCurrentNotActive. Current task: 0
+In task endIn setCurrentNotActive. Current task: 1
+In task endIn setCurrentNotActive. Current task: 2
+In task endIn setCurrentNotActive. Current task: 0
+In task endIn setCurrentNotActive. Current task: 1
+In task endIn setCurrentNotActive. Current task: 2
+In task endIn setCurrentNotActive. Current task: 0
+In task endIn setCurrentNotActive. Current task: 1
+In task endIn setCurrentNotActive. Current task: 2

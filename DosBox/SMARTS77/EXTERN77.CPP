@@ -62,7 +62,6 @@ void scheduler( )	// this also a parallel task
 		for (i=SMARTS.getTotalTasks()-1; i >= 0 ; --i)
 			if (SMARTS.getStatus(i) == SUSPENDED) 
 			{
-				cprintf("\ntask %c  is suspended",SMARTS.getName(i)) ;
 				SMARTS.setDeadlock();
 			}
 	}

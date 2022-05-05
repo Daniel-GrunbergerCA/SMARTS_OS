@@ -31,6 +31,5 @@ int edf()
 			}
 		}
 	}
-//	cprintf("%d\n\r", nextTask);
 	return nextTask;
 }

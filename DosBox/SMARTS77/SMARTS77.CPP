@@ -46,17 +46,12 @@ void Parallelism::externalFunctions(void interrupt ( *timerInterruptHandler)(...
 // We need to decrease remaining cycle time for all tasks
 void  Parallelism::decreaseCycleTime(int taskNum)
 {
-
-
 	context[taskNum].remaining_time_for_cycle--;
-//	FILE* f = fopen("filename.txt", "a");  //a  == append
-//	fprintf(f, "In decreaseCycleTime. remaining_time_for_cycle: %d. Task num: %d. Num of runs: %d\n", context[taskNum].remaining_time_for_cycle, taskNum, context[taskNum].numOfRuns);
 	if (context[taskNum].remaining_time_for_cycle <= 0)
 	{
-	//	fprintf(f, "In loop. Task status is: %d\n", context[taskNum].status);
+		// If task daeadline exceeded but is not set to not active
 		if (context[taskNum].status != NOT_ACTIVE)
 		{
-			cprintf("error");
 			this->error = 1;
 		}
 		else {
@@ -69,12 +64,13 @@ void  Parallelism::decreaseCycleTime(int taskNum)
 // Responsible for restoring stack for next task to run and update status
 void Parallelism::reDeclare(int taskNum)
 {
-	context[taskNum].numOfRuns--;
-	if (context[taskNum].numOfRuns > 0)
+
+	context[taskNum].remainingNumOfRuns--;
+	if (context[taskNum].remainingNumOfRuns > 0)
 	{
 		context[taskNum].remaining_time_for_cycle = context[taskNum].cpuTime;
 
-
+		// restore stack
 		for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
 			context[taskNum].stack[i] = context[taskNum].backupStack[i];
 
@@ -87,13 +83,13 @@ void Parallelism::reDeclare(int taskNum)
 
 
 
-int Parallelism::declareTask(void far *code, char name, int cpuTime, int numOfRuns)
+int Parallelism::declareTask(void far *code, char name, int cpuTime, int remainingNumOfRuns)
 		// Insert a new task entry in SMARTS context array [ ]
 {
 	if (totalTasks < MaxTask-1) 
 	{
 		// Add task to task entries array
-		context[totalTasks++].declare(code, userTaskEnd, name, cpuTime, numOfRuns);
+		context[totalTasks++].declare(code, userTaskEnd, name, cpuTime, remainingNumOfRuns);
 		++activeTasks;
 		return true;
 	}
@@ -135,17 +131,30 @@ void Parallelism::runTheTasks()
 			cprintf("\n\n\rExit : error");
 			break;
 		}
-		if (activeTasks==0)
-		{
-			cprintf("\n\n\rExit : finish");
-			break;
-		}
+		//if (activeTasks==0)
+		//{
+			if (isAllFinished() == 1) {
+				cprintf("\n\n\rExit : finish");
+				break;
+			}
+		//}
 	}
 		// restore the original BIOS 'interrupt vector' at the end before returning to regular DOS
 	asm	cli;	// no interrupts
 	setvect(timerInt, getvect(userInt));	// restore original BIOS time handler
 	setvect(userInt, userIntAddress);	// restore original BIOS userInt
 	asm	sti;	// yes interrupts
+}
+int Parallelism::isAllFinished()
+{
+	for (int i = 0; i < totalTasks; i++)
+	{
+		if (context[i].remainingNumOfRuns > 0)
+		{
+			return 0;
+		}
+	}
+	return 1;
 }
 
 int Parallelism::getError()
@@ -286,11 +295,6 @@ void Parallelism::resume(char taskName)
 
 void Parallelism::setCurrentNotActive()
 {	
-	FILE* f = fopen("filename.txt", "a");  //a  == append
-
-	fprintf(f, "In setCurrentNotActive. Current task: %d\n", currentTask);
-
-	fclose(f);
 	context[currentTask].status = NOT_ACTIVE;
 	--activeTasks;
 }
@@ -400,11 +404,6 @@ void Parallelism::handleTimers()
 void Parallelism::taskEnd( )
 	// This function is called after the last operation of a task, instead of function return
 {
-	FILE* f = fopen("filename.txt", "a");  //a  == append
-
-	fprintf(f, "In task end");
-
-	fclose(f);
 	SMARTS.setCurrentNotActive();
 	SMARTS.callScheduler();	// return the control to the scheduler to run a next task
 }
@@ -428,7 +427,7 @@ Task::Task()
 	currentPriority=priority=0;
 }
 //-----------------------------------------------------
-void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int numOfRuns)
+void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int remainingNumOfRuns)
 {
 	stack[MaxStack-5]=FP_OFF(code);
 	stack[MaxStack-4]=FP_SEG(code);
@@ -441,8 +440,8 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 
 	this->name= name;
 	this->cpuTime = cpuTime;
-	this->remaining_time_for_cycle = cpuTime;
-	this->numOfRuns = numOfRuns;
+	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
+	this->remainingNumOfRuns = remainingNumOfRuns;
 	this->status = READY;
 }
 
