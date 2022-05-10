@@ -5,7 +5,10 @@
 /* update  Tishrey   5777                                           */
 /* SMARTS77.H, main header file                                     */
 /********************************************************************/
-
+/*
+Zuf Newfield
+Daniel Grunberger
+*/
 #include <conio.h>
 #include <stdio.h>
 #include <dos.h>

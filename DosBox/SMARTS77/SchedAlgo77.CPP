@@ -1,6 +1,9 @@
+/*
+Zuf Newfield
+Daniel Grunberger
+*/
 
 #include "smarts77.h"
-#define MAXINT 2147483647
 
 int roundRobin( )
 // Round Robin short-term algorithm 

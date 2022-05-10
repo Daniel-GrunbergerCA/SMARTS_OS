@@ -1,4 +1,7 @@
-
+/*
+Zuf Newfield
+Daniel Grunberger
+*/
 #include "smarts77.h"
 
 Event::Event()

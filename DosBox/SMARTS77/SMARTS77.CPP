@@ -1,6 +1,8 @@
-
+/*
+Zuf Newfield
+Daniel Grunberger
+*/
 #include "smarts77.h"
-
 
 /**********    Function     **********/
 unsigned getTimerClocks( )
