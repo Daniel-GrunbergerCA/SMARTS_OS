@@ -269,6 +269,10 @@ int Parallelism::getRemainingTimeOfTask(int taskNum)
 {
 	return context[taskNum].remaining_time_for_cycle;
 }
+int Parallelism::getCurrentPriorityOfTask(int taskNum)
+{
+	return context[taskNum].currentPriority;
+}
 
 taskStatus Parallelism::getStatus(int taskNum)  	
 	// returns status or undefined if not found
@@ -320,6 +324,14 @@ void Parallelism::setOriginalPriority(int taskNum )
 void Parallelism::setCurrentOriginalPriority()
 {
 	context[currentTask].setOriginalPriority();
+}
+
+void Parallelism::setCurrentPriorityRMS()
+{
+	for (int i = 0; i < totalTasks; i++)
+	{
+
+	}
 }
 
 Event *Parallelism::getExpectedEvent(int taskNum)    
@@ -442,6 +454,8 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 
 	this->name= name;
 	this->cpuTime = cpuTime;
+	this->priority = cpuTime;
+	this->currentPriority = priority;
 	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
 	this->remainingNumOfRuns = remainingNumOfRuns;
 	this->status = READY;
@@ -474,3 +488,25 @@ void Task::sleepDecr( )
 	}
 }
 
+void Mutex::Acquire(int taskNum)
+{
+	if (s == 1) {
+		s = 0;
+	}
+	else {
+		numberSuspended++;
+		// waitingList.put(taskNum);
+		SMARTS.suspended();
+	}
+}
+
+	void Mutex::Release(int taskNum)
+	{
+		if (numberSuspended > 0) {
+			numberSuspended--;
+			// waitingList.put(taskNum);
+			SMARTS.resume();
+		}
+		else {
+			s = 1;
+	}

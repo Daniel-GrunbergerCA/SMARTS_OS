@@ -36,3 +36,23 @@ int edf()
 	}
 	return nextTask;
 }
+
+
+
+
+int rms()
+{
+	int count;
+	int nextTask = SMARTS.getTotalTasks();
+	int minPriority = 100000;
+
+	for (count = 0; count < SMARTS.getTotalTasks(); count++) {
+		if (SMARTS.getStatus(count) == READY) {
+			if (SMARTS.getCurrentPriorityOfTask(count) < minPriority) {
+				minPriority = SMARTS.getCurrentPriorityOfTask(count);
+				nextTask = count;
+			}
+		}
+	}
+	return nextTask;
+}

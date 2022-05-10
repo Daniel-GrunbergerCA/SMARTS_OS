@@ -119,6 +119,7 @@ public:
 	int getProgInt();               // get the 'program interrupt' flag status
 	void setEndOfTimeSlice();       // set the 'end of time slice' flag
 	char getName(int taskNum);
+	int getCurrentPriorityOfTask(int taskNum);
 	char getCurrentName();
 	taskStatus getStatus(int taskNum);
 	taskStatus getCurrentStatus();
@@ -129,6 +130,7 @@ public:
 	void incrPriority(int taskNum );
 	void setOriginalPriority(int taskNum );
 	void setCurrentOriginalPriority();
+	void setCurrentPriorityRMS();
 	Event *getExpectedEvent(int taskNum);
 	Event *getCurrentExpectedEvent();
 	void setCurrentExpectedEvent(Event *expectedEvent);
@@ -159,4 +161,16 @@ int edf();
 	// main scheduler object
 extern Parallelism SMARTS;
 
+
+
+class Mutex {
+	Mutex();
+public:
+	int s;
+	int numberSuspended;
+	void Acquire(int taskNum);
+	void Release(int taskNum);
+
+
+};
 

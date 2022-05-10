@@ -1,10 +1,10 @@
 
 #include "smarts77.h"
-#define NUM_OF_LOOPS_A 5
 /*
 Zuf Newfield
 Daniel Grunberger
 */
+#define NUM_OF_LOOPS_A 5
 #define NUM_OF_LOOPS_B 10
 #define NUM_OF_LOOPS_C 15
 
