@@ -25,6 +25,53 @@ Daniel Grunberger
 enum taskStatus {READY, NOT_ACTIVE, SUSPENDED, SLEEP, UNDEFINED};
 
 /**********    Classes    **********/
+class PriorityQueue
+{
+private:
+
+	int priorityQueue[MaxTask]; // array of the tassk
+	int pointerQueue; // points to next empty spot
+
+public:
+	PriorityQueue()
+	{
+		pointerQueue = 0;
+	}
+	void push(int numberTask); 
+	void sort();    
+	void swap(int* num1, int* num2);
+	int pop(); 
+	int isEmpty();
+};
+
+class Mutex
+{
+private:
+	int owner;
+	int level;
+	int s;
+	PriorityQueue pQueue;
+
+public:
+
+	Mutex(int number);
+	void acquire();
+	void release();
+	
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Event
 {
 private:

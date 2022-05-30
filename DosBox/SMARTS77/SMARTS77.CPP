@@ -1,4 +1,4 @@
-/*
+﻿/*
 Zuf Newfield
 Daniel Grunberger
 */
@@ -345,6 +345,11 @@ Event *Parallelism::getCurrentExpectedEvent( )
 	return context[currentTask].expectedEvent;
 }
 
+int Parallelism::getCurrentPriority(int taskNum)
+{
+	return context[taskNum].currentPriority;
+}
+
 void Parallelism::setCurrentExpectedEvent(Event *expectedEvent)
 {	
 	context[currentTask].expectedEvent = expectedEvent;
@@ -454,8 +459,7 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 
 	this->name= name;
 	this->cpuTime = cpuTime;
-	this->priority = cpuTime;
-	this->currentPriority = priority;
+	this->currentPriority = this->priority = cpuTime;
 	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
 	this->remainingNumOfRuns = remainingNumOfRuns;
 	this->status = READY;
@@ -488,25 +492,105 @@ void Task::sleepDecr( )
 	}
 }
 
-void Mutex::Acquire(int taskNum)
+void Mutex::acquire()
 {
-	if (s == 1) {
+	SMARTS.contextSwitchOff();
+	int currentTask = SMARTS.getCurrentTask();
+	if (s == 1 || this->owner == currentTask) {
 		s = 0;
 	}
 	else {
-		numberSuspended++;
-		// waitingList.put(taskNum);
+		this->pQueue.push(currentTask);
 		SMARTS.suspended();
 	}
+	owner = currentTask;
+	level++;
+	SMARTS.contextSwitchOn();
 }
 
-	void Mutex::Release(int taskNum)
-	{
-		if (numberSuspended > 0) {
-			numberSuspended--;
-			// waitingList.put(taskNum);
+void Mutex::release()
+{
+	SMARTS.contextSwitchOff();
+	int currentTask = SMARTS.getCurrentTask();
+	if (owner == currentTask) {
+		if (--level)
+			return;
+	}
+	else {
+		this->owner = -1;
+		if (!this->pQueue.isEmpty()) {
+			this->pQueue.pop();
 			SMARTS.resume();
 		}
 		else {
 			s = 1;
+		}
 	}
+	SMARTS.contextSwitchOn();
+}
+
+
+Mutex::Mutex(int number)
+{
+	this->s = 1;
+	this->owner = -1;
+	this->level = 0;
+}
+
+//----------------------------------------------------
+
+
+
+void PriorityQueue::push(int numberTask)
+{ 
+	priorityQuere[pointerQueue] = numberTask; // put task in the next empty slot
+    pointerQueue++; 
+
+	this->sort(); // sort queue according to priority 
+}
+
+//----------------------------------------------------
+void PriorityQueue::sort()
+{
+	// bubble sort
+	int min;
+	if (this->priorityQueue)
+	{
+		for (int i = 0; i < this->pointerQueue - 1; i++)
+		{
+			for (int j = 0; j < this->pointerQueue -i - 1; j++)
+			{
+				if (SMARTS.getCurrentPriority(priorityQueue[j]) > SMARTS.getCurrentPriority(priorityQuere[j + 1]))
+				{
+				swap(&this->priorityQueue[j], &this->priorityQueue[j+1]);
+				}
+			}
+		}
+	}
+}
+//----------------------------------------------------
+void PriorityQueue::swap(int *task1, int *task2)
+{
+	int temp = *task1;
+	*task1 = *task2;
+	*task2 = temp;
+}
+//----------------------------------------------------
+int PriorityQueue::pop()
+{
+	if (isEmpty())
+	{
+		return -1;
+	}
+	return priorityQueue[pointerQueue--];
+	
+}
+//----------------------------------------------------
+int PriorityQueue::isEmpty()
+{
+	if (this->pointerQueue == 0)
+	{
+		return true;
+	}
+	return false;
+}

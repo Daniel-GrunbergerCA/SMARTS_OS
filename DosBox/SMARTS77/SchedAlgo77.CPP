@@ -24,7 +24,7 @@ int edf()
 {
 	int count;
 	int nextTask = SMARTS.getTotalTasks();
-	int minTime = 1000;
+	int minTime = 100000;
 
 	for (count = 0; count < SMARTS.getTotalTasks(); count++) {
 		if (SMARTS.getStatus(count) == READY) {
@@ -42,16 +42,16 @@ int edf()
 
 int rms()
 {
-	int count;
 	int nextTask = SMARTS.getTotalTasks();
-	int minPriority = 100000;
+	int currentPriority = 100000;
 
-	for (count = 0; count < SMARTS.getTotalTasks(); count++) {
-		if (SMARTS.getStatus(count) == READY) {
-			if (SMARTS.getCurrentPriorityOfTask(count) < minPriority) {
-				minPriority = SMARTS.getCurrentPriorityOfTask(count);
-				nextTask = count;
-			}
+	for (int i = SMARTS.getTotalTasks() - 1; i >= 0; --i)
+	{
+		int currPriorityTime = SMARTS.getCurrentPriority(i);
+		if (SMARTS.getStatus(i) == READY && currPriorityTime < currentPriority)
+		{
+			nextTask = i;
+			currentPriority = currPriorityTime;
 		}
 	}
 	return nextTask;
