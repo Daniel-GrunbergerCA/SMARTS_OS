@@ -8,55 +8,60 @@ Daniel Grunberger
 #define NUM_OF_LOOPS_B 10
 #define NUM_OF_LOOPS_C 15
 
+// mutexx - priority inversion
+// ioMutex - cin and cout
+// Mutexy - new tasks (e, d, f)
+Mutex ioMutex(0), Mutexx(0), Mutexy(0);
+
 void a()
 {
-	SMARTS.contextSwitchOff();
+	ioMutex.Acquire();
 	cout << "\n *************   A Start    *********************";
-	SMARTS.contextSwitchOn();
+	ioMutex.Release();
 	for (int j = 0; j < NUM_OF_LOOPS_A; j++)
 	{
 		for (long i = 0; i < 200000; i++);
-		SMARTS.contextSwitchOff();
+		ioMutex.Acquire();
 		cout << "A";
-		SMARTS.contextSwitchOn();
+		ioMutex.Release();
 	}
-	SMARTS.contextSwitchOff();
+	ioMutex.Acquire();
 	cout << "\n *************   A Finish   *********************";
-	SMARTS.contextSwitchOn();
+	ioMutex.Release();
 }
 
 void b()
 {
-	SMARTS.contextSwitchOff();
+	ioMutex.Acquire();
 	cout << "\n *************   B Start    *********************";
-	SMARTS.contextSwitchOn();
-	for (int j = 0;  j < NUM_OF_LOOPS_B; j++)
+	ioMutex.Release();
+	for (int j = 0; j < NUM_OF_LOOPS_B; j++)
 	{
 		for (long i = 0; i < 200000; i++);
-		SMARTS.contextSwitchOff();
+		ioMutex.Acquire();
 		cout << "B";
-		SMARTS.contextSwitchOn();
+		ioMutex.Release();
 	}
-	SMARTS.contextSwitchOff();
+	ioMutex.Acquire();
 	cout << "\n *************   B Finish   *********************";
-	SMARTS.contextSwitchOn();
+	ioMutex.Release();
 }
 
 void c()
 {
-	SMARTS.contextSwitchOff();
+	ioMutex.Acquire();
 	cout << "\n *************   C Start    *********************";
-	SMARTS.contextSwitchOn();
+	ioMutex.Release();
 	for (int j = 0; j < NUM_OF_LOOPS_C; j++)
 	{
-		for (long i = 0; i  < 200000; i++);
-		SMARTS.contextSwitchOff();
+		for (long i = 0; i < 200000; i++);
+		ioMutex.Acquire();
 		cout << "C";
-		SMARTS.contextSwitchOn();
+		ioMutex.Release();
 	}
-	SMARTS.contextSwitchOff();
+	ioMutex.Acquire();
 	cout << "\n *************   C Finish   *********************";
-	SMARTS.contextSwitchOn();
+	ioMutex.Release();
 }
 
 void main()

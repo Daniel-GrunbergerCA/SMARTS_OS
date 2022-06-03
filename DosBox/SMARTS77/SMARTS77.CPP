@@ -211,7 +211,7 @@ int Parallelism::contextSwitchOn( )
 	if (endOfTimeSlice) //is current time slice finished ?
 	{	
 		endOfTimeSlice = false;
-		contextSwitchFlag = true;
+		this->context[currentTask].contextSwitchFlag = true;
 		callScheduler();	// return control to the scheduler
 		return 1;
 	}
@@ -220,14 +220,13 @@ int Parallelism::contextSwitchOn( )
 }
 
 void Parallelism::contextSwitchOff( )
-				// Disable context switch
 {	
-	contextSwitchFlag = false;
+	this->context[currentTask].contextSwitchFlag = false;
 }
 
 int Parallelism::getContextSwitch( )
 {	
-	return contextSwitchFlag;
+	return this->context[currentTask].contextSwitchFlag;
 }
 
 void Parallelism::setProgInt( )
@@ -462,6 +461,7 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 	this->currentPriority = this->priority = cpuTime;
 	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
 	this->remainingNumOfRuns = remainingNumOfRuns;
+	this->contextSwitchFlag = 1;
 	this->status = READY;
 }
 

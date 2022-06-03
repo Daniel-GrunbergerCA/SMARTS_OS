@@ -104,6 +104,7 @@ public:
 	int currentPriority;            // the priority of the task
 	int priority;                   // the original priority
 	int cpuTime;
+	int contextSwitchFlag;  // enables/disables context switch
 	int remaining_time_for_cycle;
 	int remainingNumOfRuns;
 	taskStatus status;              // the status of the task
@@ -128,7 +129,6 @@ private:
 	int deadlock;           // deadlock flag
 	int error;
 	int progInt;            // 'program interrupt' flag
-	int contextSwitchFlag;  // enables/disables context switch
 	int endOfTimeSlice;     // indicates that has to be a context switch as soon as possible
 		// a pointer to the new timer interrupt handler
 	void interrupt ( *timerInterruptHandler)(...);
