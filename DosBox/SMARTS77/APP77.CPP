@@ -11,44 +11,38 @@ Daniel Grunberger
 // mutexx - priority inversion
 // ioMutex - cin and cout
 // Mutexy - new tasks (e, d, f)
-Mutex ioMutex(0), Mutexx(0), Mutexy(0);
-Event evBToA, evDToC, evBToE, evDToF;
+Mutex ioMutex(0), aMutex(0), bMutex(0);
+Event evCToA, evCToB;
+FILE* out_file;
 
 void a()
 {
 	ioMutex.Acquire();
 	cout << "\n *************   A Start    *********************";
+	fprintf(out_file, "\n *************   A Start    *********************");
 	ioMutex.Release();
-	for (int j = 0; j < 15; j++)
+	for (int j = 0; j < 50; j++)
 	{
 		for (long i = 0; i < 200000; i++);
 		ioMutex.Acquire();
 		cout << "A";
+		fprintf(out_file, "\nA");
 		ioMutex.Release();
 	}
 
 	ioMutex.acquire();
-	cout << "\n *************   A Waiting to event from B  ********************* \n";
+	cout << "\n *************   A Waiting to event from C  ********************* \n";
+	fprintf(out_file, "\n *************A Waiting to event from C *********************\n");
 	ioMutex.release();
 
 
 	char s;
-	clock_t before = clock();
-	evBToA.wait(s);
-	clock_t after = clock();
+	evCToA.wait(s);
+
 
 	ioMutex.acquire();
-	cout << "\n               ------ A wait " << ((float)(after - before) / 1000000.0F) * 1000 << " milliSeconds ------ \n";
-
-	float num = ((float)(after - before) / 1000000.0F) * 1000;
-	char snum[50];
-	gcvt(num, 15, snum);
-
-	ioMutex.release();
-
-	ioMutex.acquire();
-	cout << "\n *************   A get event from B  ********************* \n";
-	fprintf(myOutput, "\n *************   A get event from B   ********************* \n");
+	cout << "\n *************   A get event from C  ********************* \n";
+	fprintf(out_file, "\n *************   A get event from C  ********************* \n");
 	ioMutex.release();
 
 	for (int k = 0; k < 15; k++)
@@ -56,12 +50,13 @@ void a()
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "A";
+		fprintf(out_file, "\nA");
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
 	cout << "\n *************   A acquire the mutex   ********************* \n";
-	fprintf(myOutput, "\n *************   A acquire the mutex    ********************* \n");
+	fprintf(out_file, "\n *************   A acquire the mutex    ********************* \n");
 	ioMutex.release();
 
 	aMutex.acquire();
@@ -90,66 +85,38 @@ void b()
 {
 	ioMutex.acquire();
 	cout << "\n *************   B Start    ********************* \n";
+	fprintf(out_file, "\n *************   B Start    ********************* \n");
 	ioMutex.release();
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 50; i++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "B";
-		fprintf(myOutput, "B");
+		fprintf(out_file, "\nB");
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
-	cout << "\n *************   B acquire the mutex   ********************* \n";
+	cout << "\n *************   B Waiting to event from C  ********************* \n";
+	fprintf(out_file, "\n *************   B Waiting to event from C  ********************* \n");
 	ioMutex.release();
-
-	Mutexx.acquire();
+	
+	char s;
+	evCToB.wait(s);
 
 	for (int k = 0; k < 10; k++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "B";
+		fprintf(out_file, "\nB");
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
-	cout << "\n *************   B send event to A   ********************* \n";
-	cout << "\n *************   B send event to E   ********************* \n";
-	ioMutex.release();
-
-	evBToA.send('A', NULL, 1);
-	evBToE.send('E', NULL, 1);
-
-	for (int n = 0; n < 10; n++)
-	{
-		for (long j = 0; j < 200000; j++);
-		ioMutex.acquire();
-		cout << "B";
-		fprintf(myOutput, "B");
-		ioMutex.release();
-	}
-
-	ioMutex.acquire();
-	cout << "\n *************   B release the mutex   ********************* \n";
-	ioMutex.release();
-
-	Mutexx.release();
-
-	for (int l = 0; l < 10; l++)
-	{
-		for (long j = 0; j < 200000; j++);
-		ioMutex.acquire();
-		cout << "B";
-		fprintf(myOutput, "B");
-		ioMutex.release();
-	}
-
-	ioMutex.acquire();
-	cout << "\n *************   B Finish   ********************* \n";
-	fprintf(myOutput, "\n *************   B Finish    ********************* \n");
+	cout << "\n *************   B Finish   *********************";
+	fprintf(out_file, "\n * ************B Finish * ********************"");
 	ioMutex.release();
 }
 
@@ -158,6 +125,7 @@ void c()
 {
 	ioMutex.acquire();
 	cout << "\n *************   C Start    ********************* \n";
+	fprintf(out_file, "\n *************   C Start    ********************* \n");
 	ioMutex.release();
 
 	for (int i = 0; i < 15; i++)
@@ -165,65 +133,64 @@ void c()
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
+		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
-	cout << "\n *************   C Waiting to event from D  ********************* \n";
+	cout << "\n *************   C acquire the mutex  ********************* \n";
+	fprintf(out_file, "\n *************   C acquire the mutex  ********************* \n");
 	ioMutex.release();
 
-	char w;
-	clock_t before = clock();
-	evDToC.wait(w);
-	clock_t after = clock();
+	aMutex.acquire();
 
-	ioMutex.acquire();
-	cout << "\n               ------ C wait " << ((float)(after - before) / 1000000.0F) * 1000 << " milliSeconds ------ \n";
-
-	float num = ((float)(after - before) / 1000000.0F) * 1000;
-	char snum[50];
-	gcvt(num, 15, snum);
-
-	ioMutex.release();
-
-	ioMutex.acquire();
-	cout << "\n *************   C get event from D  ********************* \n";
-	ioMutex.release();
-
-	for (int k = 0; k < 15; k++)
+	for (int i = 0; i < 15; i++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
+		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
+	evCToA.send('A', NULL, 0);
 	ioMutex.acquire();
-	cout << "\n *************   C acquire the mutex   ********************* \n";
+	cout << "\n *************   C send event to A  *********************";
+	fprintf(out_file, "\n *************   C send event to A   *********************");
 	ioMutex.release();
 
-	Mutexy.acquire();
+	evCToB.send('B', NULL, 0);
+	ioMutex.acquire();
+	cout << "\n *************   C send event to B  *********************";
+	fprintf(pFile, "\n *************   C send event to B   *********************");
+	ioMutex.release();
 
-	for (int n = 0; n < 15; n++)
+	for (int i = 0; i < 15; i++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
+		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
-	ioMutex.acquire();
-	cout << "\n *************   C release the mutex   ********************* \n";
-	ioMutex.release();
+	aMutex.release();
 
-	Mutexy.release();
+	for (int i = 0; i < 15; i++)
+	{
+		for (long j = 0; j < 200000; j++);
+		ioMutex.acquire();
+		cout << "C";
+		fprintf(out_file, "\nC");
+		ioMutex.release();
+	}
 
 	ioMutex.acquire();
 	cout << "\n *************   C Finish   ********************* \n";
 	ioMutex.release();
 }
 
-void d()
+/*void d()
 {
 	ioMutex.acquire();
 	cout << "\n *************   D Start    ********************* \n";
@@ -384,21 +351,23 @@ void f()
 	ioMutex.acquire();
 	cout << "\n *************   F Finish   ********************* \n";
 	ioMutex.release();
-}
+}*/
 
 void main()
 {
 	clrscr();
 	SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, edf);
+
+	out_file = fopen("output.txt", "w");
 	
 	SMARTS.declareTask(a, 'A', 400, 3); //Task 1 = High task from A/B
 	SMARTS.declareTask(b, 'B', 404, 3); //Task 2 = Low task from A/B
 
 	SMARTS.declareTask(c, 'C', 406, 3); //Task 3 = High task from C/D
-	SMARTS.declareTask(d, 'D', 410, 3); //Task 4 = Low task from C/D
+	//SMARTS.declareTask(d, 'D', 410, 3); //Task 4 = Low task from C/D
 
-	SMARTS.declareTask(e, 'E', 402, 3); //middle task A and B
-	SMARTS.declareTask(f, 'F', 408, 3); //middle task C and D
+	//SMARTS.declareTask(e, 'E', 402, 3); //middle task A and B
+	//SMARTS.declareTask(f, 'F', 408, 3); //middle task C and D
 
 	SMARTS.runTheTasks();
 }

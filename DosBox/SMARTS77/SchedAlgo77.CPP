@@ -43,7 +43,7 @@ int edf()
 int rms()
 {
 	int nextTask = SMARTS.getTotalTasks();
-	int currentPriority = 100000;
+	int currentPriority = MAXINT;
 
 	for (int i = SMARTS.getTotalTasks() - 1; i >= 0; --i)
 	{

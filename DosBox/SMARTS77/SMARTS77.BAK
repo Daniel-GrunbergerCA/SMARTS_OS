@@ -344,7 +344,7 @@ Event *Parallelism::getCurrentExpectedEvent( )
 	return context[currentTask].expectedEvent;
 }
 
-int Parallelism::getCurrentPriority(int taskNum)
+int Parallelism::getCurrentPriorityOfTask(int taskNum)
 {
 	return context[taskNum].currentPriority;
 }
@@ -426,16 +426,6 @@ void Parallelism::taskEnd( )
 	SMARTS.callScheduler();	// return the control to the scheduler to run a next task
 }
 
-int Parallelism::getPriority(int taskNum)
-{
-	return context[taskNum].currentPriority;
-}
-
-void Parallelism::setPriority(int taskNum, int priority)
-{
-	context[task].currentPriority = newPriority;
-}
-
 /**********    class body:  Task     **********/
 Task::Task()
 {
@@ -453,7 +443,6 @@ Task::Task()
 	status = NOT_ACTIVE;
 	sleepCount = 0;
 	currentPriority=priority=0;
-	contextSwitchFlag = true;
 }
 //-----------------------------------------------------
 void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int remainingNumOfRuns)
@@ -472,7 +461,7 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 	this->currentPriority = this->priority = cpuTime;
 	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
 	this->remainingNumOfRuns = remainingNumOfRuns;
-	this->contextSwitchFlag = true;
+	this->contextSwitchFlag = 1;
 	this->status = READY;
 }
 
@@ -503,7 +492,7 @@ void Task::sleepDecr( )
 	}
 }
 
-void Mutex::acquire()
+void Mutex::Acquire()
 {
 	SMARTS.contextSwitchOff();
 	int currentTask = SMARTS.getCurrentTask();
@@ -511,12 +500,6 @@ void Mutex::acquire()
 		s = 0;
 	}
 	else {
-	if (this->inheritance == 1) {
-		if (SMARTS.getPriority(owner) > SMARTS.getPriority(currentTask)) {
-			SMARTS.setPriority(owner, SMARTS.getPriority(currentTask));
-		}
-	}
-
 		this->pQueue.push(currentTask);
 		SMARTS.suspended();
 	}
@@ -525,7 +508,7 @@ void Mutex::acquire()
 	SMARTS.contextSwitchOn();
 }
 
-void Mutex::release()
+void Mutex:Release()
 {
 	SMARTS.contextSwitchOff();
 	int currentTask = SMARTS.getCurrentTask();
@@ -536,15 +519,12 @@ void Mutex::release()
 	else {
 		this->owner = -1;
 		if (!this->pQueue.isEmpty()) {
-			int task = this->pQueue.pop();
-			SMARTS.resume(task);
+			this->pQueue.pop();
+			SMARTS.resume();
 		}
 		else {
 			s = 1;
 		}
-	}
-	if (this->inheritance == 1) {
-		SMARTS.setOriginalPriority(owner);
 	}
 	SMARTS.contextSwitchOn();
 }
@@ -555,7 +535,6 @@ Mutex::Mutex(int number)
 	this->s = 1;
 	this->owner = -1;
 	this->level = 0;
-	this->inheritance = inheritance;
 }
 
 //----------------------------------------------------
@@ -564,7 +543,7 @@ Mutex::Mutex(int number)
 
 void PriorityQueue::push(int numberTask)
 { 
-	priorityQuere[pointerQueue] = numberTask; // put task in the next empty slot
+	priorityQueue[pointerQueue] = numberTask; // put task in the next empty slot
     pointerQueue++; 
 
 	this->sort(); // sort queue according to priority 
@@ -581,7 +560,7 @@ void PriorityQueue::sort()
 		{
 			for (int j = 0; j < this->pointerQueue -i - 1; j++)
 			{
-				if (SMARTS.getCurrentPriority(priorityQueue[j]) > SMARTS.getCurrentPriority(priorityQuere[j + 1]))
+				if (SMARTS.getCurrentPriorityOfTask(priorityQueue[j]) > SMARTS.getCurrentPriorityOfTask(priorityQueue[j + 1]))
 				{
 				swap(&this->priorityQueue[j], &this->priorityQueue[j+1]);
 				}

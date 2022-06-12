@@ -5,10 +5,7 @@
 /* update  Tishrey   5777                                           */
 /* SMARTS77.H, main header file                                     */
 /********************************************************************/
-/*
-Zuf Newfield
-Daniel Grunberger
-*/
+
 #include <conio.h>
 #include <stdio.h>
 #include <dos.h>
@@ -37,10 +34,10 @@ public:
 	{
 		pointerQueue = 0;
 	}
-	void push(int numberTask); 
-	void sort();    
+	void push(int numberTask);
+	void sort();
 	void swap(int* num1, int* num2);
-	int pop(); 
+	int pop();
 	int isEmpty();
 };
 
@@ -51,13 +48,14 @@ private:
 	int level;
 	int s;
 	PriorityQueue pQueue;
+	int inheritance;
 
 public:
 
-	Mutex(int number);
+	Mutex(int inheritance);
 	void acquire();
 	void release();
-	
+
 };
 
 
@@ -94,14 +92,14 @@ public:
 	int currentPriority;            // the priority of the task
 	int priority;                   // the original priority
 	int cpuTime;
-	int contextSwitchFlag;  // enables/disables context switch
 	int remaining_time_for_cycle;
-	int remainingNumOfRuns;
+	int numOfRuns;
+	int contextSwitchFlag;
 	taskStatus status;              // the status of the task
 	Event *expectedEvent;           // the event that this task is waiting for
 	int sleepCount;                 // the sleep remainder time
 	Task();
-	void declare(void far *code, void far *taskEnd, char name, int cpuTime, int remainingNumOfRuns);
+	void declare(void far *code, void far *taskEnd, char name, int cpuTime, int numOfRuns);
 	void sleepDecr();
 	void incrPriority();
 	void setOriginalPriority();
@@ -119,6 +117,7 @@ private:
 	int deadlock;           // deadlock flag
 	int error;
 	int progInt;            // 'program interrupt' flag
+	int contextSwitchFlag;  // enables/disables context switch
 	int endOfTimeSlice;     // indicates that has to be a context switch as soon as possible
 		// a pointer to the new timer interrupt handler
 	void interrupt ( *timerInterruptHandler)(...);
@@ -139,7 +138,7 @@ public:
 	void externalFunctions(void interrupt ( *timerInterruptHandler)(...),
 				   void far *scheduler, void far *userTaskEnd,
 				   int far (*algorithm)());
-	int declareTask(void far *code, char name, int cpuTime, int remainingNumOfRuns); // inserts a new task entry
+	int declareTask(void far *code, char name, int cpuTime, int numOfRuns); // inserts a new task entry
 	void runTheTasks();// start running the tasks
 	void callScheduler();          // return to the control to the scheduler
 	void restoreSchedStack();       // restore the 'scheduler' stack
@@ -156,7 +155,6 @@ public:
 	int getProgInt();               // get the 'program interrupt' flag status
 	void setEndOfTimeSlice();       // set the 'end of time slice' flag
 	char getName(int taskNum);
-	int getCurrentPriorityOfTask(int taskNum);
 	char getCurrentName();
 	taskStatus getStatus(int taskNum);
 	taskStatus getCurrentStatus();
@@ -167,7 +165,6 @@ public:
 	void incrPriority(int taskNum );
 	void setOriginalPriority(int taskNum );
 	void setCurrentOriginalPriority();
-	void setCurrentPriorityRMS();
 	Event *getExpectedEvent(int taskNum);
 	Event *getCurrentExpectedEvent();
 	void setCurrentExpectedEvent(Event *expectedEvent);
@@ -176,13 +173,12 @@ public:
 	void getCurrentStack(unsigned &StackSeg, unsigned &StackPtr);
 	void setCurrentStack(unsigned StackSeg, unsigned StackPtr);
 	void getSchedStack(unsigned &StackSeg, unsigned &StackPtr);
-	int getRemainingTimeOfTask(int taskNum);
 	void reDeclare(int taskNum);
 	void decreaseCycleTime(int taskNum);
 	void handleTimers();
 	void taskEnd();
-	int getError();
-	int isAllFinished();
+	int getPriority(int taskNum);
+	void setPriority(int taskNum, int priority);
 };
 //=======================
 /**********    Functions    **********/
@@ -195,19 +191,8 @@ void myTaskEnd();
 	// 'short term' scheduler algorithms 
 int roundRobin();
 int edf();
+int rms();
 	// main scheduler object
 extern Parallelism SMARTS;
 
-
-
-class Mutex {
-	Mutex();
-public:
-	int s;
-	int numberSuspended;
-	void Acquire(int taskNum);
-	void Release(int taskNum);
-
-
-};
 
