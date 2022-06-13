@@ -1,4 +1,4 @@
-﻿/*
+/*
 Zuf Newfield
 Daniel Grunberger
 */
@@ -67,8 +67,8 @@ void  Parallelism::decreaseCycleTime(int taskNum)
 void Parallelism::reDeclare(int taskNum)
 {
 
-	context[taskNum].remainingNumOfRuns--;
-	if (context[taskNum].remainingNumOfRuns > 0)
+	context[taskNum].num_of_runs--;
+	if (context[taskNum].num_of_runs > 0)
 	{
 		context[taskNum].remaining_time_for_cycle = context[taskNum].cpuTime;
 
@@ -85,13 +85,13 @@ void Parallelism::reDeclare(int taskNum)
 
 
 
-int Parallelism::declareTask(void far *code, char name, int cpuTime, int remainingNumOfRuns)
+int Parallelism::declareTask(void far *code, char name, int cpuTime, int num_of_runs)
 		// Insert a new task entry in SMARTS context array [ ]
 {
 	if (totalTasks < MaxTask-1) 
 	{
 		// Add task to task entries array
-		context[totalTasks++].declare(code, userTaskEnd, name, cpuTime, remainingNumOfRuns);
+		context[totalTasks++].declare(code, userTaskEnd, name, cpuTime, num_of_runs);
 		++activeTasks;
 		return true;
 	}
@@ -149,9 +149,9 @@ void Parallelism::runTheTasks()
 }
 int Parallelism::isAllFinished()
 {
-	for (int i = 0; i < totalTasks; i++)
+	for (int i = 0; i < totalTasks-1; i++)
 	{
-		if (context[i].remainingNumOfRuns > 0)
+		if (context[i].num_of_runs > 0)
 		{
 			return 0;
 		}
@@ -215,7 +215,7 @@ int Parallelism::contextSwitchOn( )
 		callScheduler();	// return control to the scheduler
 		return 1;
 	}
-	contextSwitchFlag = true;
+	this->context[currentTask].contextSwitchFlag = true;
 	return 0;
 }
 
@@ -273,6 +273,11 @@ int Parallelism::getCurrentPriorityOfTask(int taskNum)
 	return context[taskNum].currentPriority;
 }
 
+void Parallelism::setError()
+{
+	this->error = 1;
+}
+
 taskStatus Parallelism::getStatus(int taskNum)  	
 	// returns status or undefined if not found
 {
@@ -325,13 +330,7 @@ void Parallelism::setCurrentOriginalPriority()
 	context[currentTask].setOriginalPriority();
 }
 
-void Parallelism::setCurrentPriorityRMS()
-{
-	for (int i = 0; i < totalTasks; i++)
-	{
 
-	}
-}
 
 Event *Parallelism::getExpectedEvent(int taskNum)    
 // returns *Event  or  NULL  if not found
@@ -393,18 +392,49 @@ void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr)
 	StackPtr = contextSched.stackPtr;
 }
 
-void Parallelism::handleTimers()
+/*void Parallelism::handleTimers()
 	// handling of the sleep status mode
+{
+	for (int i = totalTasks - 1; i >= 0; --i)
+	{
+		if (getStatus(i) == SLEEP)
+		{
+			sleepDecr(i);
+			if (getStatus(i) == READY)
+				--sleepTasks;
+		}
+	}
+	for (int j = totalTasks - 1; j >= 0; --j)
+	{
+		context[j].remaining_time_for_cycle--;
+		if (context[j].remaining_time_for_cycle <= 0)
+		{
+			if (getStatus(j) != NOT_ACTIVE)
+			{
+				cprintf("error");
+				cout << "in hadleTimers: status of task:" <<  j   << "is not NOT_ACTVE\n";
+				setError();
+			}
+			else if (context[j].num_of_runs > 0)
+			{
+				context[j].redeclare();
+			}
+		}
+	}
+}*/
+
+void Parallelism::handleTimers()
+// handling of the sleep status mode
 {
 	int i;
 
 	// It gets here
 
-	for (i=totalTasks-1; i >=0 ; --i) 
-	{	
+	for (i = totalTasks - 1; i >= 0; --i)
+	{
 
 
-		if(getStatus(i)==SLEEP)
+		if (getStatus(i) == SLEEP)
 		{
 			sleepDecr(i);
 			if (getStatus(i) == READY)
@@ -433,7 +463,7 @@ int Parallelism::getPriority(int taskNum)
 
 void Parallelism::setPriority(int taskNum, int priority)
 {
-	context[task].currentPriority = newPriority;
+	context[taskNum].currentPriority = priority;
 }
 
 /**********    class body:  Task     **********/
@@ -456,7 +486,7 @@ Task::Task()
 	contextSwitchFlag = true;
 }
 //-----------------------------------------------------
-void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int remainingNumOfRuns)
+void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int num_of_runs)
 {
 	stack[MaxStack-5]=FP_OFF(code);
 	stack[MaxStack-4]=FP_SEG(code);
@@ -471,7 +501,7 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 	this->cpuTime = cpuTime;
 	this->currentPriority = this->priority = cpuTime;
 	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
-	this->remainingNumOfRuns = remainingNumOfRuns;
+	this->num_of_runs = num_of_runs;
 	this->contextSwitchFlag = true;
 	this->status = READY;
 }
@@ -487,6 +517,17 @@ void Task::incrPriority( )
 void Task::setOriginalPriority( )
 {
 	currentPriority = priority;
+}
+void Task::redeclare()
+{
+	for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
+		this->stack[i] = this->backupStack[i];
+
+	stackSeg = FP_SEG(&stack[MaxStack - 14]);
+	stackPtr = FP_OFF(&stack[MaxStack - 14]);
+	this->num_of_runs--;
+	this->remaining_time_for_cycle = this->remaining_time_for_cycle;
+	status = READY;
 }
 //----------------------------------------------------
 void Task::sleepDecr( )
@@ -532,7 +573,6 @@ void Mutex::release()
 	if (owner == currentTask) {
 		if (--level)
 			return;
-	}
 	else {
 		this->owner = -1;
 		if (!this->pQueue.isEmpty()) {
@@ -543,6 +583,7 @@ void Mutex::release()
 			s = 1;
 		}
 	}
+	}
 	if (this->inheritance == 1) {
 		SMARTS.setOriginalPriority(owner);
 	}
@@ -550,7 +591,7 @@ void Mutex::release()
 }
 
 
-Mutex::Mutex(int number)
+Mutex::Mutex(int inheritance)
 {
 	this->s = 1;
 	this->owner = -1;
@@ -564,7 +605,7 @@ Mutex::Mutex(int number)
 
 void PriorityQueue::push(int numberTask)
 { 
-	priorityQuere[pointerQueue] = numberTask; // put task in the next empty slot
+	priorityQueue[pointerQueue] = numberTask; // put task in the next empty slot
     pointerQueue++; 
 
 	this->sort(); // sort queue according to priority 
@@ -581,7 +622,7 @@ void PriorityQueue::sort()
 		{
 			for (int j = 0; j < this->pointerQueue -i - 1; j++)
 			{
-				if (SMARTS.getCurrentPriority(priorityQueue[j]) > SMARTS.getCurrentPriority(priorityQuere[j + 1]))
+				if (SMARTS.getCurrentPriority(priorityQueue[j]) > SMARTS.getCurrentPriority(priorityQueue[j + 1]))
 				{
 				swap(&this->priorityQueue[j], &this->priorityQueue[j+1]);
 				}

@@ -11,29 +11,28 @@ Daniel Grunberger
 // mutexx - priority inversion
 // ioMutex - cin and cout
 // Mutexy - new tasks (e, d, f)
-Mutex ioMutex(0), aMutex(0), bMutex(0);
+Mutex ioMutex(1), aMutex(1), bMutex(1);
 Event evCToA, evCToB;
 FILE* out_file;
 
 void a()
 {
-	ioMutex.Acquire();
+	ioMutex.acquire();
 	cout << "\n *************   A Start    *********************";
 	fprintf(out_file, "\n *************   A Start    *********************");
-	ioMutex.Release();
+	ioMutex.release();
 	for (int j = 0; j < 50; j++)
 	{
 		for (long i = 0; i < 200000; i++);
-		ioMutex.Acquire();
+		ioMutex.acquire();
 		cout << "A";
-		fprintf(out_file, "\nA");
-		ioMutex.Release();
+		ioMutex.release();
 	}
 
 	ioMutex.acquire();
 	cout << "\n *************   A Waiting to event from C  ********************* \n";
 	fprintf(out_file, "\n *************A Waiting to event from C *********************\n");
-	ioMutex.release();
+	ioMutex.release();	
 
 
 	char s;
@@ -50,7 +49,6 @@ void a()
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "A";
-		fprintf(out_file, "\nA");
 		ioMutex.release();
 	}
 
@@ -64,19 +62,21 @@ void a()
 	for (int n = 0; n < 15; n++)
 	{
 		for (long j = 0; j < 200000; j++);
-		outMutex.acquire();
+		ioMutex.acquire();
 		cout << "A";
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
 	cout << "\n *************   A release the mutex   ********************* \n";
+	fprintf(out_file, "\n *************   A release the mutex   ********************* \n");
 	ioMutex.release();
 
 	aMutex.release();
 
 	ioMutex.acquire();
 	cout << "\n *************   A Finish   ********************* \n";
+	fprintf(out_file, "\n *************   A Finish   ********************* \n");
 	ioMutex.release();
 
 }
@@ -93,7 +93,6 @@ void b()
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "B";
-		fprintf(out_file, "\nB");
 		ioMutex.release();
 	}
 
@@ -110,13 +109,12 @@ void b()
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "B";
-		fprintf(out_file, "\nB");
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
 	cout << "\n *************   B Finish   *********************";
-	fprintf(out_file, "\n * ************B Finish * ********************"");
+	fprintf(out_file, "\n * ************B Finish * ********************""\n");
 	ioMutex.release();
 }
 
@@ -133,7 +131,6 @@ void c()
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
-		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
@@ -144,12 +141,11 @@ void c()
 
 	aMutex.acquire();
 
-	for (int i = 0; i < 15; i++)
+	for (int k = 0; k < 15; k++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
-		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
@@ -162,31 +158,30 @@ void c()
 	evCToB.send('B', NULL, 0);
 	ioMutex.acquire();
 	cout << "\n *************   C send event to B  *********************";
-	fprintf(pFile, "\n *************   C send event to B   *********************");
+	fprintf(out_file, "\n *************   C send event to B   *********************");
 	ioMutex.release();
 
-	for (int i = 0; i < 15; i++)
+	for (int l = 0; l < 15; l++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
-		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
 	aMutex.release();
 
-	for (int i = 0; i < 15; i++)
+	for (int g = 0; g < 15; g++)
 	{
 		for (long j = 0; j < 200000; j++);
 		ioMutex.acquire();
 		cout << "C";
-		fprintf(out_file, "\nC");
 		ioMutex.release();
 	}
 
 	ioMutex.acquire();
 	cout << "\n *************   C Finish   ********************* \n";
+	fprintf(out_file, "\n *************   C Finish   ********************* \n");
 	ioMutex.release();
 }
 
@@ -356,14 +351,13 @@ void f()
 void main()
 {
 	clrscr();
-	SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, edf);
+	SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rms);
 
-	out_file = fopen("output.txt", "w");
+	out_file = fopen("3_with_i.txt", "w");
 	
-	SMARTS.declareTask(a, 'A', 400, 3); //Task 1 = High task from A/B
-	SMARTS.declareTask(b, 'B', 404, 3); //Task 2 = Low task from A/B
-
-	SMARTS.declareTask(c, 'C', 406, 3); //Task 3 = High task from C/D
+	SMARTS.declareTask(a, 'A', 600, 3);
+	SMARTS.declareTask(b, 'B', 601, 3);
+	SMARTS.declareTask(c, 'C', 602, 3);
 	//SMARTS.declareTask(d, 'D', 410, 3); //Task 4 = Low task from C/D
 
 	//SMARTS.declareTask(e, 'E', 402, 3); //middle task A and B

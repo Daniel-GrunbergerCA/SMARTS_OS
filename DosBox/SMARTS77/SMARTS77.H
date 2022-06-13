@@ -93,16 +93,17 @@ public:
 	int priority;                   // the original priority
 	int cpuTime;
 	int remaining_time_for_cycle;
-	int numOfRuns;
+	int num_of_runs;
 	int contextSwitchFlag;
 	taskStatus status;              // the status of the task
 	Event *expectedEvent;           // the event that this task is waiting for
 	int sleepCount;                 // the sleep remainder time
 	Task();
-	void declare(void far *code, void far *taskEnd, char name, int cpuTime, int numOfRuns);
+	void declare(void far *code, void far *taskEnd, char name, int cpuTime, int num_of_runs);
 	void sleepDecr();
 	void incrPriority();
 	void setOriginalPriority();
+	void redeclare();
 
 };
 //                           Main class
@@ -138,7 +139,7 @@ public:
 	void externalFunctions(void interrupt ( *timerInterruptHandler)(...),
 				   void far *scheduler, void far *userTaskEnd,
 				   int far (*algorithm)());
-	int declareTask(void far *code, char name, int cpuTime, int numOfRuns); // inserts a new task entry
+	int declareTask(void far *code, char name, int cpuTime, int num_of_runs); // inserts a new task entry
 	void runTheTasks();// start running the tasks
 	void callScheduler();          // return to the control to the scheduler
 	void restoreSchedStack();       // restore the 'scheduler' stack
@@ -179,7 +180,14 @@ public:
 	void taskEnd();
 	int getPriority(int taskNum);
 	void setPriority(int taskNum, int priority);
-};
+	int getRemainingTimeOfTask(int taskNum);
+	int getCurrentPriority(int taskNum);
+	int isAllFinished();
+	int getError();
+	int getCurrentPriorityOfTask(int taskNum);
+	void setError();
+	
+	};
 //=======================
 /**********    Functions    **********/
 	// reads the number of the remaining clocks from the timer register

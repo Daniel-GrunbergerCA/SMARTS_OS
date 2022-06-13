@@ -67,8 +67,8 @@ void  Parallelism::decreaseCycleTime(int taskNum)
 void Parallelism::reDeclare(int taskNum)
 {
 
-	context[taskNum].remainingNumOfRuns--;
-	if (context[taskNum].remainingNumOfRuns > 0)
+	context[taskNum].num_of_runs--;
+	if (context[taskNum].num_of_runs > 0)
 	{
 		context[taskNum].remaining_time_for_cycle = context[taskNum].cpuTime;
 
@@ -85,13 +85,13 @@ void Parallelism::reDeclare(int taskNum)
 
 
 
-int Parallelism::declareTask(void far *code, char name, int cpuTime, int remainingNumOfRuns)
+int Parallelism::declareTask(void far *code, char name, int cpuTime, int num_of_runs)
 		// Insert a new task entry in SMARTS context array [ ]
 {
 	if (totalTasks < MaxTask-1) 
 	{
 		// Add task to task entries array
-		context[totalTasks++].declare(code, userTaskEnd, name, cpuTime, remainingNumOfRuns);
+		context[totalTasks++].declare(code, userTaskEnd, name, cpuTime, num_of_runs);
 		++activeTasks;
 		return true;
 	}
@@ -151,7 +151,7 @@ int Parallelism::isAllFinished()
 {
 	for (int i = 0; i < totalTasks; i++)
 	{
-		if (context[i].remainingNumOfRuns > 0)
+		if (context[i].num_of_runs > 0)
 		{
 			return 0;
 		}
@@ -344,7 +344,7 @@ Event *Parallelism::getCurrentExpectedEvent( )
 	return context[currentTask].expectedEvent;
 }
 
-int Parallelism::getCurrentPriorityOfTask(int taskNum)
+int Parallelism::getCurrentPriority(int taskNum)
 {
 	return context[taskNum].currentPriority;
 }
@@ -426,6 +426,16 @@ void Parallelism::taskEnd( )
 	SMARTS.callScheduler();	// return the control to the scheduler to run a next task
 }
 
+int Parallelism::getPriority(int taskNum)
+{
+	return context[taskNum].currentPriority;
+}
+
+void Parallelism::setPriority(int taskNum, int priority)
+{
+	context[task].currentPriority = newPriority;
+}
+
 /**********    class body:  Task     **********/
 Task::Task()
 {
@@ -443,9 +453,10 @@ Task::Task()
 	status = NOT_ACTIVE;
 	sleepCount = 0;
 	currentPriority=priority=0;
+	contextSwitchFlag = true;
 }
 //-----------------------------------------------------
-void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int remainingNumOfRuns)
+void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime, int num_of_runs)
 {
 	stack[MaxStack-5]=FP_OFF(code);
 	stack[MaxStack-4]=FP_SEG(code);
@@ -460,8 +471,8 @@ void Task::declare(void far *code, void far *userTaskEnd, char name,int cpuTime,
 	this->cpuTime = cpuTime;
 	this->currentPriority = this->priority = cpuTime;
 	this->remaining_time_for_cycle = cpuTime; // deadline is cpuTime
-	this->remainingNumOfRuns = remainingNumOfRuns;
-	this->contextSwitchFlag = 1;
+	this->num_of_runs = num_of_runs;
+	this->contextSwitchFlag = true;
 	this->status = READY;
 }
 
@@ -492,7 +503,7 @@ void Task::sleepDecr( )
 	}
 }
 
-void Mutex::Acquire()
+void Mutex::acquire()
 {
 	SMARTS.contextSwitchOff();
 	int currentTask = SMARTS.getCurrentTask();
@@ -500,6 +511,12 @@ void Mutex::Acquire()
 		s = 0;
 	}
 	else {
+	if (this->inheritance == 1) {
+		if (SMARTS.getPriority(owner) > SMARTS.getPriority(currentTask)) {
+			SMARTS.setPriority(owner, SMARTS.getPriority(currentTask));
+		}
+	}
+
 		this->pQueue.push(currentTask);
 		SMARTS.suspended();
 	}
@@ -508,7 +525,7 @@ void Mutex::Acquire()
 	SMARTS.contextSwitchOn();
 }
 
-void Mutex:Release()
+void Mutex::release()
 {
 	SMARTS.contextSwitchOff();
 	int currentTask = SMARTS.getCurrentTask();
@@ -519,12 +536,15 @@ void Mutex:Release()
 	else {
 		this->owner = -1;
 		if (!this->pQueue.isEmpty()) {
-			this->pQueue.pop();
-			SMARTS.resume();
+			int task = this->pQueue.pop();
+			SMARTS.resume(task);
 		}
 		else {
 			s = 1;
 		}
+	}
+	if (this->inheritance == 1) {
+		SMARTS.setOriginalPriority(owner);
 	}
 	SMARTS.contextSwitchOn();
 }
@@ -535,6 +555,7 @@ Mutex::Mutex(int number)
 	this->s = 1;
 	this->owner = -1;
 	this->level = 0;
+	this->inheritance = inheritance;
 }
 
 //----------------------------------------------------
@@ -560,7 +581,7 @@ void PriorityQueue::sort()
 		{
 			for (int j = 0; j < this->pointerQueue -i - 1; j++)
 			{
-				if (SMARTS.getCurrentPriorityOfTask(priorityQueue[j]) > SMARTS.getCurrentPriorityOfTask(priorityQueue[j + 1]))
+				if (SMARTS.getCurrentPriority(priorityQueue[j]) > SMARTS.getCurrentPriority(priorityQueue[j + 1]))
 				{
 				swap(&this->priorityQueue[j], &this->priorityQueue[j+1]);
 				}
