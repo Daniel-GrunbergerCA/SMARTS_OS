@@ -392,7 +392,7 @@ void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr)
 	StackPtr = contextSched.stackPtr;
 }
 
-/*void Parallelism::handleTimers()
+void Parallelism::handleTimers()
 	// handling of the sleep status mode
 {
 	for (int i = totalTasks - 1; i >= 0; --i)
@@ -421,9 +421,9 @@ void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr)
 			}
 		}
 	}
-}*/
+}
 
-void Parallelism::handleTimers()
+/*void Parallelism::handleTimers()
 // handling of the sleep status mode
 {
 	int i;
@@ -447,7 +447,7 @@ void Parallelism::handleTimers()
 		decreaseCycleTime(i);
 	}
 
-}
+}*/
 
 void Parallelism::taskEnd( )
 	// This function is called after the last operation of a task, instead of function return
@@ -525,8 +525,9 @@ void Task::redeclare()
 
 	stackSeg = FP_SEG(&stack[MaxStack - 14]);
 	stackPtr = FP_OFF(&stack[MaxStack - 14]);
+
 	this->num_of_runs--;
-	this->remaining_time_for_cycle = this->remaining_time_for_cycle;
+	this->remaining_time_for_cycle = this->cpuTime;
 	status = READY;
 }
 //----------------------------------------------------
@@ -577,7 +578,7 @@ void Mutex::release()
 		this->owner = -1;
 		if (!this->pQueue.isEmpty()) {
 			int task = this->pQueue.pop();
-			SMARTS.resume(task);
+			SMARTS.resume(task);	
 		}
 		else {
 			s = 1;
@@ -618,9 +619,9 @@ void PriorityQueue::sort()
 	int min;
 	if (this->priorityQueue)
 	{
-		for (int i = 0; i < this->pointerQueue - 1; i++)
+		for (int i = 0; i < this->pointerQueue; i++)
 		{
-			for (int j = 0; j < this->pointerQueue -i - 1; j++)
+			for (int j = 0; j < this->pointerQueue -i; j++)
 			{
 				if (SMARTS.getCurrentPriority(priorityQueue[j]) > SMARTS.getCurrentPriority(priorityQueue[j + 1]))
 				{

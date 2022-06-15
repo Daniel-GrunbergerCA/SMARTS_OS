@@ -1,7 +1,17 @@
-
+﻿
 #include "smarts77.h"
+/*
+Zuf Newfield
+Daniel Grunberger
+*/
+#define NUM_OF_LOOPS_A 5
+#define NUM_OF_LOOPS_B 10
+#define NUM_OF_LOOPS_C 15
 
-Mutex ioMutex(1), aMutex(1), bMutex(1);
+// mutexx - priority inversion
+// ioMutex - cin and cout
+// Mutexy - new tasks (e, d, f)
+Mutex ioMutex(0), aMutex(0), bMutex(0);
 Event ev_c_to_a, ev_c_to_b, ev_f_to_d, ev_f_to_e;
 FILE* out_file;
 
@@ -358,13 +368,14 @@ void f()
 }
 
 
+	
 
 void main()
 {
 	clrscr();
 	SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rms);
 
-	out_file = fopen("6_with_i.txt", "w");
+	out_file = fopen("6_no_i.txt", "w");
 	
 	SMARTS.declareTask(a, 'A', 600, 3);
 	SMARTS.declareTask(b, 'B', 601, 3);
@@ -375,4 +386,42 @@ void main()
 
 	SMARTS.runTheTasks();
 }
+
+/*
+The define statments are on the top of this file
+
+Works for edf and for round robin:
+
+	#define NUM_OF_LOOPS_A 5
+	#define NUM_OF_LOOPS_B 10
+	#define NUM_OF_LOOPS_C 15
+    SMARTS.declareTask(a, 'A', 100, 5); 
+	SMARTS.declareTask(b, 'B', 70, 4);
+	SMARTS.declareTask(c, 'C', 50, 3);
+
+
+---------------------------------------------------------------
+Works for edf and does NOT work for round robin:
+
+	#define NUM_OF_LOOPS_A 16
+	#define NUM_OF_LOOPS_B 22
+	#define NUM_OF_LOOPS_C 33
+	SMARTS.declareTask(a, 'A', 100, 5);
+	SMARTS.declareTask(b, 'B', 70, 4);
+	SMARTS.declareTask(c, 'C', 50, 3);
+
+
+ ---------------------------------------------------------------
+ Does NOT work for edf and does NOT work for round robin:
+
+	#define NUM_OF_LOOPS_A 33
+	#define NUM_OF_LOOPS_B 33
+	#define NUM_OF_LOOPS_C 33
+	SMARTS.declareTask(a, 'A', 50, 5); 
+	SMARTS.declareTask(b, 'B', 70, 4);
+	SMARTS.declareTask(c, 'C', 100, 3);
+
+*/
+
+
 
